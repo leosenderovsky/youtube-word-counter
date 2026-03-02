@@ -1,0 +1,44 @@
+:root {
+    --bg-color: #18181b;
+    --surface-color: #27272a;
+    --border-color: #3f3f46;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --accent-color: #ef4444;
+  }
+  
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    display: flex; flex-direction: column;
+    height: 100vh;
+  }
+  
+  .container { display: flex; flex-direction: column; height: 100%; padding: 16px; box-sizing: border-box; }
+  header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  h1 { font-size: 16px; margin: 0; }
+  .controls { display: flex; gap: 8px; }
+  
+  select {
+    background: var(--surface-color); color: white; border: 1px solid var(--border-color);
+    border-radius: 4px; padding: 4px; font-size: 12px;
+  }
+  
+  .status { font-size: 12px; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 12px; }
+  .status.live { background: rgba(239, 68, 68, 0.1); color: var(--accent-color); border: 1px solid rgba(239, 68, 68, 0.2); }
+  .status.ended { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
+  
+  main { flex: 1; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: var(--surface-color); margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px; color: var(--text-secondary); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--surface-color); }
+  td { padding: 8px 10px; border-bottom: 1px solid rgba(63, 63, 70, 0.5); }
+  .count-cell { text-align: right; color: var(--accent-color); font-family: monospace; }
+  
+  footer { display: flex; flex-direction: column; gap: 8px; }
+  .export-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn { width: 100%; padding: 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: 500; font-size: 13px; }
+  .btn.primary { background: var(--accent-color); color: white; }
+  .btn.secondary { background: var(--surface-color); color: white; border: 1px solid var(--border-color); }
+  .hidden { display: none !important; }

@@ -1,0 +1,30 @@
+{
+    "manifest_version": 3,
+    "name": "YouTube Subtitle Word Counter",
+    "version": "1.3",
+    "description": "Analiza la frecuencia de palabras de los subtítulos de YouTube en un panel lateral.",
+    "permissions": [
+      "storage",
+      "sidePanel",
+      "tabs",
+      "scripting"
+    ],
+    "host_permissions": [
+      "*://*.youtube.com/*"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "side_panel": {
+      "default_path": "sidepanel.html"
+    },
+    "action": {
+      "default_title": "Abrir panel de análisis"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*.youtube.com/*"],
+        "js": ["content.js"]
+      }
+    ]
+  }
