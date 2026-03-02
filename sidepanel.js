@@ -9,27 +9,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportGroup = document.getElementById('export-group');
     const statusBanner = document.getElementById('status-banner');
     const tableContainer = document.querySelector('.table-container');
+    const btnStart = document.getElementById('btn-start');
+    const startContainer = document.getElementById('start-container');
   
     let isFinalReport = false;
     let currentWordCounts = {};
   
-    const safeSendMessage = (message) => {
+    const safeSendMessage = (message, callback) => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (tabs[0]?.url?.includes("youtube.com")) {
-          chrome.tabs.sendMessage(tabs[0].id, message).catch(() => {
-            console.log("El script de contenido aún no está listo.");
+        if (tabs[0] && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, message, (response) => {
+            if (chrome.runtime.lastError) {
+              console.log("Error al enviar mensaje:", chrome.runtime.lastError.message);
+              if (callback) callback({ error: chrome.runtime.lastError.message });
+            } else {
+              if (callback) callback(response);
+            }
           });
+        } else {
+          console.log("No se pudo encontrar una pestaña activa.");
+          if (callback) callback({ error: "No active tab found." });
         }
       });
     };
   
-    chrome.storage.local.get(['wordCounts', 'language', 'videoEnded'], (result) => {
-      if (result.language) langSelect.value = result.language;
-      if (result.wordCounts) {
-        currentWordCounts = result.wordCounts;
-        updateTable();
-      }
-      if (result.videoEnded) showFinalReport();
+    chrome.storage.local.get(['wordCounts', 'language', 'videoEnded', 'isCapturing'], (result) => {
+        if (result.language) langSelect.value = result.language;
+        if (result.wordCounts) {
+            currentWordCounts = result.wordCounts;
+            updateTable();
+        }
+        if(result.isCapturing){
+            showCaptureUI();
+        }
+        if (result.videoEnded) showFinalReport();
     });
   
     chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -43,21 +56,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   
     langSelect.addEventListener('change', (e) => {
-      const lang = e.target.value;
-      chrome.storage.local.set({ language: lang });
-      safeSendMessage({ action: "setLanguage", language: lang });
+        const lang = e.target.value;
+        chrome.storage.local.set({ language: lang });
+        safeSendMessage({ action: "setLanguage", language: lang });
+      });
+
+    btnStart.addEventListener('click', () => {
+        const lang = langSelect.value;
+        safeSendMessage({ action: "start", language: lang }, (response) => {
+            if(response && response.status === 'started'){
+                chrome.storage.local.set({ isCapturing: true, language: lang });
+                showCaptureUI();
+            }
+        });
     });
   
     btnReset.addEventListener('click', () => {
       if (confirm('¿Resetear todos los datos?')) {
-        chrome.storage.local.set({ wordCounts: {}, videoEnded: false });
+        chrome.storage.local.set({ wordCounts: {}, videoEnded: false, isCapturing: false });
         currentWordCounts = {};
         isFinalReport = false;
-        statusBanner.className = 'status live';
-        statusBanner.textContent = '🔴 En vivo';
-        btnReport.classList.remove('hidden');
-        exportGroup.classList.add('hidden');
-        updateTable();
+        showStartUI();
         safeSendMessage({ action: "reset" });
       }
     });
@@ -65,25 +84,43 @@ document.addEventListener('DOMContentLoaded', () => {
     btnReport.addEventListener('click', showFinalReport);
     btnExportCsv.addEventListener('click', () => exportToCSV(currentWordCounts));
     btnExportTxt.addEventListener('click', () => exportToTXT(currentWordCounts));
+
+    function showStartUI(){
+        startContainer.style.display = 'block';
+        tableContainer.style.display = 'none';
+        emptyState.style.display = 'none';
+        statusBanner.style.display = 'none';
+        btnReport.style.display = 'none';
+        exportGroup.classList.add('hidden');
+    }
+
+    function showCaptureUI(){
+        startContainer.style.display = 'none';
+        statusBanner.style.display = 'block';
+        btnReport.style.display = 'block';
+        statusBanner.className = 'status live';
+        statusBanner.textContent = '🔴 En vivo';
+        updateTable();
+    }
   
     function updateTable() {
-      const sortedWords = Object.entries(currentWordCounts).sort((a, b) => b[1] - a[1]);
-      const displayWords = isFinalReport ? sortedWords : sortedWords.slice(0, 15);
-  
-      if (displayWords.length === 0) {
-        tableContainer.style.display = 'none';
-        emptyState.style.display = 'block';
-        return;
-      }
-  
-      tableContainer.style.display = 'block';
-      emptyState.style.display = 'none';
-      tbody.innerHTML = '';
-      displayWords.forEach(([word, count]) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${word}</td><td class="count-cell">${count}</td>`;
-        tbody.appendChild(tr);
-      });
+        if(!currentWordCounts || Object.keys(currentWordCounts).length === 0){
+            tableContainer.style.display = 'none';
+            emptyState.style.display = 'block';
+            return;
+        }
+
+        tableContainer.style.display = 'block';
+        emptyState.style.display = 'none';
+        const sortedWords = Object.entries(currentWordCounts).sort((a, b) => b[1] - a[1]);
+        const displayWords = isFinalReport ? sortedWords : sortedWords.slice(0, 15);
+    
+        tbody.innerHTML = '';
+        displayWords.forEach(([word, count]) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${word}</td><td class="count-cell">${count}</td>`;
+            tbody.appendChild(tr);
+        });
     }
   
     function showFinalReport() {

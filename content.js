@@ -19,13 +19,19 @@ function isContextValid() {
     });
   }
   
-  chrome.runtime.onMessage.addListener((request) => {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (!isContextValid()) return;
     if (request.action === "setLanguage") {
       currentLanguage = request.language;
     } else if (request.action === "reset") {
       wordCounts = {};
       lastProcessedText = "";
+      if(observer) observer.disconnect();
+      observer = null;
+    } else if (request.action === "start"){
+        currentLanguage = request.language;
+        setup();
+        sendResponse({status: "started"});
     }
   });
   
@@ -46,7 +52,6 @@ function isContextValid() {
       const newWords = cleanAndExtractWords(currentText);
       const oldWords = cleanAndExtractWords(lastProcessedText);
       
-      // Solo contar palabras que no estaban en el segmento anterior
       newWords.forEach(word => {
         if (!oldWords.includes(word)) {
           wordCounts[word] = (wordCounts[word] || 0) + 1;
@@ -70,11 +75,3 @@ function isContextValid() {
       video.onended = () => isContextValid() && chrome.storage.local.set({ videoEnded: true });
     }
   };
-  
-  const initInterval = setInterval(() => {
-    if (!isContextValid()) {
-      clearInterval(initInterval);
-      return;
-    }
-    setup();
-  }, 1000);

@@ -19,10 +19,13 @@
       </div>
     </header>
 
-    <div id="status-banner" class="status live">🔴 En vivo</div>
+    <div id="status-banner" class="status live" style="display: none;">🔴 En vivo</div>
 
     <main>
-      <div class="table-container">
+      <div id="start-container">
+        <button id="btn-start" class="btn primary">Iniciar Captura</button>
+      </div>
+      <div class="table-container" style="display: none;">
         <table id="word-table">
           <thead>
             <tr>
@@ -33,13 +36,13 @@
           <tbody id="word-tbody"></tbody>
         </table>
       </div>
-      <div id="empty-state" class="empty-state">
+      <div id="empty-state" class="empty-state" style="display: none;">
         Esperando subtítulos...
       </div>
     </main>
 
     <footer>
-      <button id="btn-report" class="btn primary">Generar Reporte Final</button>
+      <button id="btn-report" class="btn primary" style="display: none;">Generar Reporte Final</button>
       <div id="export-group" class="export-group hidden">
         <button id="btn-export-csv" class="btn secondary">CSV</button>
         <button id="btn-export-txt" class="btn secondary">TXT</button>
